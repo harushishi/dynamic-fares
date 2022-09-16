@@ -1,0 +1,39 @@
+{
+  "name": "dynamic-fares",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon app.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harushishi/dynamic-fares.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/harushishi/dynamic-fares/issues"
+  },
+  "homepage": "https://github.com/harushishi/dynamic-fares#readme",
+  "devDependencies": {
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.14",
+    "@types/fparser": "^2.0.0",
+    "@types/node": "^18.7.18",
+    "prisma": "^4.3.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^4.3.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.2",
+    "express": "^4.18.1",
+    "fparser": "^2.0.2",
+    "nodemon": "^2.0.19",
+    "studio": "^0.13.5"
+  }
+}

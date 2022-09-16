@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id            Int      @id @default(autoincrement())
+  client        Client?  @relation(fields: [clientId], references: [id])
+  driver        Driver?  @relation(fields: [driverId], references: [id])
+  paymentMethod String
+  distance      Int
+  city          City?    @relation(fields: [cityId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  driverId      Int?
+  clientId      Int?
+  cityId        Int?
+}
+
+model CompletedOrder {
+  id        Int  @id @default(autoincrement())
+  orderId   Int
+  farePrice Int?
+}
+
+model Client {
+  id      Int     @id @default(autoincrement())
+  name    String
+  loyalty String
+  rating  String
+  orders  Order[]
+}
+
+model Driver {
+  id      Int      @id @default(autoincrement())
+  name    String
+  loyalty String
+  rating  String
+  orders  Order[]
+  vehicle Vehicle?
+}
+
+model Vehicle {
+  id       Int    @id @default(autoincrement())
+  driver   Driver @relation(fields: [driverId], references: [id])
+  driverId Int    @unique
+  type     String
+  fuelType String
+}
+
+model City {
+  id       Int       @id @default(autoincrement())
+  name     String
+  formulae Formula[]
+  orders   Order[]
+}
+
+model Formula {
+  id         Int    @id @default(autoincrement())
+  City       City?  @relation(fields: [cityId], references: [id])
+  cityId     Int?
+  definition String
+}
+
+model Modifier {
+  id     Int        @id @default(autoincrement())
+  name   String
+  values ModValue[]
+}
+
+model ModValue {
+  id         Int       @id @default(autoincrement())
+  name       String
+  value      Int
+  Modifier   Modifier? @relation(fields: [modifierId], references: [id])
+  modifierId Int?
+}
