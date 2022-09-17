@@ -3,12 +3,22 @@ import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors'
 import { orderRouter } from "./src/routes/order";
+import { createClient } from 'redis';
 
-const prisma = new PrismaClient()
 dotenv.config();
-
+export const prismaClient = new PrismaClient()
 const app: Express = express();
 const port = process.env.APP_PORT;
+
+export const redisClient = createClient();
+
+(async () => {
+
+
+    redisClient.on("error", (err: any) => console.log("Redis Client Error", err));
+
+    await redisClient.connect();
+})();
 
 app.use(cors())
 app.use(express.json())

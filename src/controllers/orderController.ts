@@ -1,10 +1,9 @@
-import { PrismaClient } from '@prisma/client'
 import { Request, Response } from 'express';
 import { calculateVars } from '../util/formulaVars';
 import Formula from 'fparser';
 import { Client, Driver, Order, Vehicle } from '../util/types';
-
-const prisma = new PrismaClient()
+import { prismaClient, redisClient } from '../../app';
+import { DEFAULT_EXP } from '../util/constants';
 
 const calculateFare = async (req: Request, res: Response) => {
 
@@ -19,7 +18,7 @@ const calculateFare = async (req: Request, res: Response) => {
         return res.status(400).send({ message: `wrong request syntax` })
     }
 
-    const completedOrder = await prisma.completedOrder.findFirst({
+    const completedOrder = await prismaClient.completedOrder.findFirst({
         where: {
             orderId: order.id
         }
@@ -30,6 +29,14 @@ const calculateFare = async (req: Request, res: Response) => {
         return res.status(400).send({ message: `order already fulfilled` })
     }
 
+    //check if calculated fare is available on cache
+    const cachedFare = await redisClient.get(`order-${order.id}`)
+
+    if (cachedFare != null) {
+        console.log('Sent from cache')
+        return res.json(JSON.parse(cachedFare))
+    }
+
     const { cl, dl, cr, dr, vt, ft, pm, dt }
         = await calculateVars(client, driver, order, vehicle)
 
@@ -38,7 +45,7 @@ const calculateFare = async (req: Request, res: Response) => {
         return res.status(500).send({ message: `missing data or wrong values` })
     }
 
-    const formula = await prisma.formula.findUnique({
+    const formula = await prismaClient.formula.findUnique({
         where: {
             id: order.formulaId
         }, select: {
@@ -59,9 +66,14 @@ const calculateFare = async (req: Request, res: Response) => {
                 ft: ft, pm: pm, dt: dt, dist: order.distance
             });
 
-        return res.json(result)
-    } catch (error) {
-        return res.status(500).send({ message: `fare calculation failed` })
+        const calculatedOrder = { orderId: order.id, farePrice: result }
+
+        await redisClient.setEx(`order-${order.id}`, DEFAULT_EXP, JSON.stringify(calculatedOrder));
+
+        console.log('sent without cache')
+        res.json(calculatedOrder)
+    } catch (error: any) {
+        res.status(500).send(error.message)
     }
 }
 

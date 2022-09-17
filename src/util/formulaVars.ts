@@ -1,6 +1,6 @@
-import { PrismaClient } from '@prisma/client'
+import { prismaClient } from '../../app';
 import { Client, Driver, Order, Vehicle } from '../util/types';
-const prisma = new PrismaClient()
+
 
 export async function calculateVars(client: Client, driver: Driver, order:
     Order, vehicle: Vehicle) {
@@ -19,7 +19,7 @@ export async function calculateVars(client: Client, driver: Driver, order:
 async function calculateLoyalty(loyalty: string | undefined) {
     try {
 
-        const value = await prisma.modValue.findFirstOrThrow({
+        const value = await prismaClient.modValue.findFirstOrThrow({
             where: {
                 modifierId: 1,
                 AND: {
@@ -38,7 +38,7 @@ async function calculateLoyalty(loyalty: string | undefined) {
 async function calculateRating(rating: string | undefined) {
     try {
 
-        const value = await prisma.modValue.findFirstOrThrow({
+        const value = await prismaClient.modValue.findFirstOrThrow({
             where: {
                 modifierId: 2,
                 AND: {
@@ -56,7 +56,7 @@ async function calculateRating(rating: string | undefined) {
 async function calculateVehType(vehicle: string | undefined) {
     try {
 
-        const value = await prisma.modValue.findFirstOrThrow({
+        const value = await prismaClient.modValue.findFirstOrThrow({
             where: {
                 modifierId: 4,
                 AND: {
@@ -85,7 +85,7 @@ async function calculateDayTime() {
             daytime = 'night'
         }
 
-        const value = await prisma.modValue.findFirstOrThrow({
+        const value = await prismaClient.modValue.findFirstOrThrow({
             where: {
                 modifierId: 3,
                 AND: {
@@ -104,7 +104,7 @@ async function calculateDayTime() {
 async function calculateFuelType(fuel: string | undefined) {
     try {
 
-        const value = await prisma.modValue.findFirstOrThrow({
+        const value = await prismaClient.modValue.findFirstOrThrow({
             where: {
                 modifierId: 5,
                 AND: {
@@ -123,7 +123,7 @@ async function calculateFuelType(fuel: string | undefined) {
 async function calculatePaymentMethod(pm: string | undefined) {
     try {
 
-        const value = await prisma.modValue.findFirstOrThrow({
+        const value = await prismaClient.modValue.findFirstOrThrow({
             where: {
                 modifierId: 6,
                 AND: {
