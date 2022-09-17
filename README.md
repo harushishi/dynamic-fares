@@ -1,1 +1,2 @@
 # dynamic-fares
+API that handles fare calculation given an order, client, driver, and vehicle. Picks up a desired formula to be used from the city selected and replaces the variables in it with the info given previously to return a fare price.
