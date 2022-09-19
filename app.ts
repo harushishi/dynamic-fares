@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client"
 import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors'
-import { orderRouter } from "./src/routes/order";
+import { orderRouter } from "./src/routes/api";
 import { createClient } from 'redis';
 
 dotenv.config();
@@ -25,7 +25,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 //routes
-app.use("/api/order", orderRouter);
+app.use("/api/", orderRouter);
 
 app.get('/', (req: Request, res: Response) => {
     res.send('API live');

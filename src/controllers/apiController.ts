@@ -1,12 +1,11 @@
 import { Request, Response } from 'express';
-import { calculateVars } from '../util/formulaVars';
+import { calculateVars, testFormula } from '../util/formulaVars';
 import Formula from 'fparser';
 import { Client, Driver, Order, Vehicle } from '../util/types';
 import { prismaClient, redisClient } from '../../app';
 import { DEFAULT_EXP } from '../util/constants';
 
 const calculateFare = async (req: Request, res: Response) => {
-
     const
         { order, client, driver, vehicle }:
             {
@@ -33,7 +32,7 @@ const calculateFare = async (req: Request, res: Response) => {
     const cachedFare = await redisClient.get(`order-${order.id}`)
 
     if (cachedFare != null) {
-        console.log('Sent from cache')
+        console.log('cache hit')
         return res.json(JSON.parse(cachedFare))
     }
 
@@ -70,14 +69,58 @@ const calculateFare = async (req: Request, res: Response) => {
 
         await redisClient.setEx(`order-${order.id}`, DEFAULT_EXP, JSON.stringify(calculatedOrder));
 
-        console.log('sent without cache')
+        console.log('no cache')
         res.json(calculatedOrder)
     } catch (error: any) {
         res.status(500).send(error.message)
     }
 }
 
-// const test = async (req: Request, res: Response) => {
+const addFormula = async (req: Request, res: Response) => {
+    const cityId = Number(req.body.cityId)
+    const formulaDefinition = req.body.formulaDefinition
+
+    if (!cityId || !formulaDefinition) {
+        return res.status(400).send({ message: `wrong request syntax` })
+    }
+
+    const city = await prismaClient.city.findUnique({
+        where: {
+            id: cityId
+        }
+    })
+    if (!city) {
+        return res.status(404).send({ message: `city not found` })
+    }
+
+    const formula = await prismaClient.formula.
+        findFirst({
+            where: {
+                definition: formulaDefinition
+            }
+        })
+    if (formula) {
+        return res.status(400).send({ message: `formula already exists` })
+    }
+
+    if (!testFormula(formulaDefinition)) {
+        return res.status(400).send({ message: `wrong formula syntax` })
+    }
+
+    try {
+        await prismaClient.formula.create({
+            data: {
+                cityId: cityId,
+                definition: formulaDefinition
+            }
+        })
+        return res.status(200).send()
+    } catch (error) {
+        return res.status(500).send({ message: `failed to save formula` })
+    }
+}
+
+// const oldCalulateFare = async (req: Request, res: Response) => {
 //     // checking that everything exists and retrieving values for each variable
 //     try {
 //         const { clientId, driverId, cityId, paymentMethod, distance } = req.body
@@ -136,4 +179,5 @@ const calculateFare = async (req: Request, res: Response) => {
 
 export {
     calculateFare,
+    addFormula
 }

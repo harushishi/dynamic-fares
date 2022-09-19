@@ -1,5 +1,6 @@
 import { prismaClient } from '../../app';
 import { Client, Driver, Order, Vehicle } from '../util/types';
+import Formula from 'fparser';
 
 
 export async function calculateVars(client: Client, driver: Driver, order:
@@ -14,6 +15,23 @@ export async function calculateVars(client: Client, driver: Driver, order:
     const dt = await calculateDayTime()
 
     return ({ cl, dl, cr, dr, vt, ft, pm, dt })
+}
+
+export function testFormula(definition: string): Boolean {
+    const [cl, dl, cr, dr, vt, ft, pm, dt, dist] = [1, 1, 1, 1, 1, 1, 1, 1, 1]
+    try {
+        const fObj = new Formula(definition);
+
+        let result = fObj.evaluate
+            ({
+                cl: cl, dl: dl, cr: cr, dr: dr, vt: vt,
+                ft: ft, pm: pm, dt: dt, dist: dist
+            });
+
+        return true
+    } catch (error) {
+        return false
+    }
 }
 
 async function calculateLoyalty(loyalty: string | undefined) {
