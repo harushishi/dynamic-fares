@@ -32,4 +32,9 @@ export type City = {
     id: number,
     name: string,
     formulae: Formula[]
-} 
+}
+
+export type cachedOrder = {
+    orderId: number,
+    farePrice: number
+}

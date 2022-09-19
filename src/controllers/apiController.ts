@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { calculateVars, testFormula } from '../util/formulaVars';
 import Formula from 'fparser';
-import { Client, Driver, Order, Vehicle } from '../util/types';
+import { cachedOrder, Client, Driver, Order, Vehicle } from '../util/types';
 import { prismaClient, redisClient } from '../../app';
 import { DEFAULT_EXP } from '../util/constants';
 
@@ -76,6 +76,40 @@ const calculateFare = async (req: Request, res: Response) => {
     }
 }
 
+const acceptFare = async (req: Request, res: Response) => {
+    const orderId = Number(req.params.id)
+    //check if the order was already fulfilled
+    const fulfilled = await prismaClient.completedOrder.findFirst({
+        where: {
+            orderId: orderId
+        }
+    })
+    if (fulfilled) {
+        return res.status(400).send({ message: 'order already fulfilled' })
+    }
+
+    //check if calculated fare is available on cache
+    let value = await redisClient.get(`order-${orderId}`)
+    if (!value) {
+        return res.status(404).send({ message: 'fare expired' })
+    }
+
+    const completedOrder: cachedOrder = JSON.parse(value)
+
+    try {
+        await prismaClient.completedOrder.create({
+            data: {
+                orderId: completedOrder.orderId,
+                farePrice: completedOrder.farePrice
+            }
+        })
+        await redisClient.del(`order-${orderId}`)
+        return res.status(200).send()
+    } catch (error) {
+        return res.status(500).send({ message: `failed to complete order` })
+    }
+}
+
 const addFormula = async (req: Request, res: Response) => {
     const cityId = Number(req.body.cityId)
     const formulaDefinition = req.body.formulaDefinition
@@ -114,7 +148,7 @@ const addFormula = async (req: Request, res: Response) => {
                 definition: formulaDefinition
             }
         })
-        return res.status(200).send()
+        return res.status(201).send()
     } catch (error) {
         return res.status(500).send({ message: `failed to save formula` })
     }
@@ -179,5 +213,6 @@ const addFormula = async (req: Request, res: Response) => {
 
 export {
     calculateFare,
-    addFormula
+    addFormula,
+    acceptFare
 }
